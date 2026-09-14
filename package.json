@@ -1,0 +1,20 @@
+{
+  "name": "last-night-of-aetheria-grok-bot",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "天空城最後一夜 (Grok Bot) — Last Night of Aetheria, Grok Bot version",
+  "scripts": {
+    "dev": "vite --host --port 4731",
+    "build": "tsc && vite build",
+    "preview": "vite preview --host --port 4731"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.4",
+    "typescript": "~5.9.2",
+    "vite": "^7.1.0"
+  }
+}
