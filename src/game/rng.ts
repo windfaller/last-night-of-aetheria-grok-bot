@@ -14,6 +14,6 @@ export function hash2(x: number, z: number): number {
   return n - Math.floor(n)
 }
 
-export function pick\u003cT\u003e(rng: () => number, list: readonly T[]): T {
+export function pick<T>(rng: () => number, list: readonly T[]): T {
   return list[Math.floor(rng() * list.length)]
 }
