@@ -229,3 +229,77 @@ function makeAtmosphere(scene: THREE.Scene): { sky: THREE.Mesh; clouds: THREE.Me
   scene.add(clouds)
   return { sky, clouds }
 }
+
+function buildDistrict(
+  g: THREE.Group,
+  def: DistrictDef,
+  rng: () => number,
+  collision: CollisionWorld,
+  landmarks: Landmark[],
+  interactables: Interactable[],
+  interiors: Interior[],
+  animated: { mesh: THREE.Object3D; spin: THREE.Vector3 }[],
+  banners: THREE.Mesh[],
+  debris: THREE.Object3D[],
+): void {
+  addPlatform(g, def, collision, debris)
+  addRingRoad(g, def, collision)
+  scatterBlocks(g, def, rng, collision, banners, debris)
+  districtFlavor(g, def, rng, collision, landmarks, interactables, interiors, animated, banners, debris)
+  addLamps(g, def, rng)
+}
+
+function addPlatform(g: THREE.Group, def: DistrictDef, collision: CollisionWorld, debris: THREE.Object3D[]): void {
+  const mat = new THREE.MeshStandardMaterial({
+    color: def.palette.stone,
+    roughness: 0.86,
+    metalness: def.id === 'industrial' ? 0.25 : 0.05,
+  })
+  const under = new THREE.MeshStandardMaterial({
+    color: def.palette.under,
+    roughness: 0.9,
+  })
+  const disk = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.98, R * 1.02, def.thickness, 48), mat)
+  disk.position.y = def.y - def.thickness * 0.5
+  g.add(disk)
+  debris.push(disk)
+  const cityFloor = collision.addFloor(0, def.y, 0, R * 2.05, R * 2.05, 1.2, `floor-${def.id}`)
+  cityFloor.maxRadius = R - 6
+
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(R * 0.99, 1.1, 6, 48), new THREE.MeshStandardMaterial({
+    color: def.palette.trim,
+    roughness: 0.6,
+  }))
+  lip.rotation.x = Math.PI * 0.5
+  lip.position.y = def.y + 0.2
+  g.add(lip)
+
+  // Underside ribs so lower districts can read the city above.
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2
+    const rib = new THREE.Mesh(new THREE.BoxGeometry(R * 1.7, 1.2, 2.2), under)
+    rib.position.set(0, def.y - def.thickness - 0.4, 0)
+    rib.rotation.y = a
+    g.add(rib)
+  }
+
+  // View notches — carved courtyards so you always see other layers.
+  const notchMat = new THREE.MeshStandardMaterial({ color: def.palette.fog, roughness: 1 })
+  for (const a of [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5]) {
+    const cut = new THREE.Mesh(new THREE.BoxGeometry(22, 3, 46), notchMat)
+    cut.position.set(Math.sin(a) * (R - 28), def.y + 1.2, Math.cos(a) * (R - 28))
+    cut.rotation.y = a
+    g.add(cut)
+  }
+}
+
+function addRingRoad(g: THREE.Group, def: DistrictDef, collision: CollisionWorld): void {
+  const rail = new THREE.MeshStandardMaterial({ color: def.palette.trim, roughness: 0.5, metalness: 0.2 })
+  for (const rad of [72, 148]) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(rad, 0.35, 5, 64), rail)
+    ring.rotation.x = Math.PI * 0.5
+    ring.position.y = def.y + 1.1
+    g.add(ring)
+    collision.addFloor(0, def.y, 0, rad * 2 + 8, rad * 2 + 8, 0.4, `ring-${def.id}-${rad}`)
+  }
+}
